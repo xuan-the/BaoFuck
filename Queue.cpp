@@ -8,7 +8,7 @@
 
 using namespace std;
 int quantity = 0;
-
+void displayLibraryFromFile(const string& filePath);
 int generateBookID(string basicString);
 
 int generateAlphabetID(char c);
@@ -186,15 +186,8 @@ int main()
         case 1:
         {
             cout << "\n\n\n++++++++++     D I S P L A Y     ++++++++++\n";
-            // For each rack
-            for (int c = 0; c < 5; ++c)
-            {
-                // For each shelve
-                for (int r = 0; r < 10; ++r)
-                {
-                    displayLibrary(rack[r][c]);
-                }
-            }
+            // Display all books from the file
+            displayLibraryFromFile("D:\\BaoFuck\\Queue\\datafile.txt");
             break;
         }
         case 2:
@@ -401,63 +394,67 @@ BST* searchBST(struct BST* root, int id)
     }
 }
 
-void addBook(int shelve, string book_name, string author_name)
-{
+void addBook(int shelve, string book_name, string author_name) {
     int id = generateBookID(book_name);
     int row = id % 10;
     struct Book* new_book = new Book(book_name, author_name, id, row);
 
     // Checking if BST already exists then work on it
-    if (rack[row][shelve] != NULL)
-    {
+    if (rack[row][shelve] != NULL) {
 
         // Create it root and search if any BST already exists
         struct BST* root = rack[row][shelve];
         struct BST* searched = searchBST(root, id);
 
         // If no BST with such ID exists
-        if (searched == NULL)
-        {
+        if (searched == NULL) {
             struct BST* new_BST = createBST(id, root);
 
-            // Adding new_book book to BST
+            // Adding new_book book to BST  
             new_BST->next = new_book;
         }
 
-        // If BST exists with same ID
-        else
-        {
+        // If BST exists with the same ID
+        else {
 
-            // Search if book with same name exists
+            // Search if the book with the same name exists
             struct Book* searched_book = searchBook(searched, book_name, author_name);
 
-            // If same book is alredy present
+            // If the same book is already present
             if (searched_book != NULL)
                 searched_book->amount++;
-            else
-            {
+            else {
                 new_book->next = searched->next;
                 searched->next = new_book;
             }
         }
     }
 
-    // If BST does not exist at shelve array
-    else
-    {
+    // If BST does not exist at the shelve array
+    else {
         rack[row][shelve] = new BST(id);
         rack[row][shelve]->next = new_book;
     }
-    // Open file in write mode to clear its contents
+
+    // Open file in write mode to overwrite existing data
     ofstream outFile("D:\\BaoFuck\\Queue\\datafile.txt", ios::out);
+    for (int i = 0; i < 10; ++i) {
+        for (int j = 0; j < 5; ++j) {
+            struct BST* currentBST = rack[i][j];
+            displayLibrary(currentBST); // Display data while writing to file
+            while (currentBST != NULL) {
+                struct Book* currentBook = currentBST->next;
+                while (currentBook != NULL) {
+                    outFile << currentBook->rack << endl << currentBook->name << endl << currentBook->author << endl;
+                    currentBook = currentBook->next;
+                }
+                currentBST = currentBST->right;
+            }
+        }
+    }
     outFile.close();
-
-    // Open file in append mode to add new data
-    outFile.open("D:\\BaoFuck\\Queue\\datafile.txt", ios::app);
-    outFile << new_book->rack << endl << new_book->name << endl << new_book->author << endl;
-    outFile.close();
-
 }
+
 
 BST* createBST(int id, struct BST* root)
 {
@@ -487,6 +484,32 @@ BST* createBST(int id, struct BST* root)
             k->right = current;
     }
     return current;
+}
+void displayLibraryFromFile(const string& filePath) {
+    ifstream inFile(filePath, ios::in);
+
+    if (!inFile) {
+        cerr << "Unable to open file " << filePath;
+        exit(1); // call system to stop
+    }
+
+    int shelve;
+    string shelve_str;
+    string book_name;
+    string author_name;
+
+    while (getline(inFile, shelve_str)) {
+        // converting shelve_str to int
+        shelve = stoi(shelve_str);
+
+        getline(inFile, book_name);
+        getline(inFile, author_name);
+
+        // Display the read data
+        cout << "Rack: " << shelve << " Book Name: " << book_name << " Author: " << author_name << endl;
+    }
+
+    inFile.close();
 }
 
 void displayLibrary(struct BST* root)
